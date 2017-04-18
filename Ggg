@@ -1,0 +1,134 @@
+
+Stack Overflow
+sign up log in
+Questions Jobs Tags Users Badges Ask
+Read this post in our app!
+up vote
+1
+down vote
+favorite
+Create Bar Chart in Excel with Apache POI
+java excel charts apache-poi
+I'm trying to create a Bar Chart in an XLSX Spreadsheet using Apache POI, but Excel keeps saying that there's a problem with the content and deleting the chart when I try to open the file. Here's the full code of what I'm trying to do:
+
+public static void createBarChart() {
+
+        Workbook wb = new XSSFWorkbook();
+        Sheet sheet = wb.createSheet("Sheet2");
+        Row row;
+        Cell cell;
+
+        row = sheet.createRow(0);
+        row.createCell(0);
+        row.createCell(1).setCellValue("HEADER 1");
+        row.createCell(2).setCellValue("HEADER 2");
+        row.createCell(3).setCellValue("HEADER 3");
+
+        for (int r = 1; r < 5; r++) {
+            row = sheet.createRow(r);
+            cell = row.createCell(0);
+            cell.setCellValue("Serie " + r);
+            cell = row.createCell(1);
+            cell.setCellValue(123);
+            cell = row.createCell(2);
+            cell.setCellValue(456);
+            cell = row.createCell(3);
+            cell.setCellValue(789);
+        }
+
+        Drawing drawing = sheet.createDrawingPatriarch();
+        ClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 0, 5, 5, 20);
+
+        Chart chart = drawing.createChart(anchor);
+
+        CTChart ctChart = ((XSSFChart) chart).getCTChart();
+
+        ctChart.addNewTitle();
+
+        CTPlotArea ctPlotArea = ctChart.getPlotArea();
+        CTBarChart ctBarChart = ctPlotArea.addNewBarChart();
+
+        ctBarChart.addNewBarDir().setVal(STBarDir.COL);
+        ctBarChart.addNewGrouping().setVal(STBarGrouping.CLUSTERED);
+        ctBarChart.addNewVaryColors().setVal(false);
+
+        // First series
+        CTBarSer ctBarSer = ctBarChart.addNewSer();
+
+        ctBarSer.addNewIdx().setVal(0);
+        ctBarSer.addNewOrder().setVal(0);
+
+        // [01] Title
+        CTSerTx ctSerTx = ctBarSer.addNewTx();
+        CTStrRef ctSerTxStrRef = ctSerTx.addNewStrRef();
+        ctSerTxStrRef.setF("Sheet2!$A$2");
+
+        CTStrData strCache = ctSerTxStrRef.addNewStrCache();
+        strCache.addNewPtCount().setVal(1);
+        CTStrVal newPt = strCache.addNewPt();
+        newPt.setV("Serie 1");
+        newPt.setIdx(0);
+
+        // [01] SpPr
+        CTShapeProperties spPr = ctBarSer.addNewSpPr();
+        CTSolidColorFillProperties solidFill = spPr.addNewSolidFill();
+        solidFill.addNewSchemeClr().setVal(STSchemeColorValImpl.ACCENT_1);
+        spPr.addNewLn().addNewNoFill();
+        spPr.addNewEffectLst();
+
+        // [01] Invert if negative
+        ctBarSer.addNewInvertIfNegative().setVal(false);
+
+        // [01] Series titles
+        CTAxDataSource newCat = ctBarSer.addNewCat();
+        CTStrRef addNewStrRef = newCat.addNewStrRef();
+        addNewStrRef.setF("Sheet2!$B$1:$D$1");
+
+        CTStrData addNewStrCache = addNewStrRef.addNewStrCache();
+        addNewStrCache.addNewPtCount().setVal(3);
+
+        CTStrVal pt1 = addNewStrCache.addNewPt();
+        pt1.setIdx(0);
+        pt1.setV(sheet.getRow(0).getCell(1).getStringCellValue());
+
+        CTStrVal pt2 = addNewStrCache.addNewPt();
+        pt2.setIdx(1);
+        pt2.setV(sheet.getRow(0).getCell(2).getStringCellValue());
+
+        CTStrVal pt3 = addNewStrCache.addNewPt();
+        pt3.setIdx(2);
+        pt3.setV(sheet.getRow(0).getCell(3).getStringCellValue());
+
+        // [01] Series values
+        CTNumDataSource newVal = ctBarSer.addNewVal();
+        CTNumRef numRef = newVal.addNewNumRef();
+        numRef.setF("Sheet2!$B$2:$D$2");
+        CTNumData numCache = numRef.addNewNumCache();
+        numCache.addNewPtCount().setVal(3);
+
+        CTNumVal numpt1 = numCache.addNewPt();
+        numpt1.setIdx(0);
+        numpt1.setV(String.valueOf(sheet.getRow(1).getCell(1).getNumericCellValue()));
+
+        CTNumVal numpt2 = numCache.addNewPt();
+        numpt2.setIdx(1);
+        numpt2.setV(String.valueOf(sheet.getRow(1).getCell(2).getNumericCellValue()));
+
+        CTNumVal numpt3 = numCache.addNewPt();
+        numpt3.setIdx(2);
+        numpt3.setV(String.valueOf(sheet.getRow(1).getCell(3).getNumericCellValue()));
+
+        // dLbls
+        CTDLbls dLbls = ctBarChart.addNewDLbls();
+        dLbls.addNewShowBubbleSize().setVal(false);
+        dLbls.addNewShowLegendKey().setVal(false);
+        dLbls.addNewShowCatName().setVal(false);
+        dLbls.addNewShowSerName().setVal(false);
+        dLbls.addNewShowPercent().setVal(false);
+        dLbls.addNewShowVal().setVal(false);
+
+        FileOutputStream fileOut = new FileOutputStream("barchart.xlsx");
+        wb.write(fileOut);
+        wb.close();
+        fileOut.close();
+    }
